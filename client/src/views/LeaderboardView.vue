@@ -14,7 +14,7 @@ const fetchScores = async () => {
   try {
     isLoading.value = true;
     error.value = null;
-    const response = await axios.get('http://localhost:5000/scores');
+    const response = await axios.get('${import.meta.env.VITE_API_URL}/scores');
     // Sort scores by WPM in descending order before storing them.
     scores.value = response.data.sort((a, b) => b.wpm - a.wpm);
   } catch (err) {

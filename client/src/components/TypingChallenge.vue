@@ -58,14 +58,14 @@ const setupChallenge = async () => {
     try {
         let response;
         if (gameMode.value === 'words' || gameMode.value === 'time') {
-            response = await axios.get('http://localhost:5000/texts/words');
+            response = await axios.get('${import.meta.env.VITE_API_URL}/texts/words');
             const words = response.data;
             let wordCount = gameMode.value === 'time' ? 200 : wordSetting.value;
             const shuffled = words.sort(() => 0.5 - Math.random());
             const selectedWords = shuffled.slice(0, wordCount);
             textToType.value = selectedWords.join(' ');
         } else if (gameMode.value === 'quote') {
-            response = await axios.get(`http://localhost:5000/texts/random?category=${quoteSetting.value}`);
+            response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/random?category=${quoteSetting.value}`);
             textToType.value = response.data?.content || "No quotes of this length found.";
         }
     } catch (error) {
@@ -198,7 +198,7 @@ const saveScore = async () => {
             accuracy: accuracy.value,
             mode: modeDescription
         };
-        await axios.post('http://localhost:5000/scores/add', scoreData);
+        await axios.post('${import.meta.env.VITE_API_URL}/scores/add', scoreData);
         scoreSaved.value = true;
     } catch (error) {
         console.error("Error saving score:", error);
