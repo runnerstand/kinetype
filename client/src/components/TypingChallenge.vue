@@ -58,7 +58,7 @@ const setupChallenge = async () => {
     try {
         let response;
         if (gameMode.value === 'words' || gameMode.value === 'time') {
-            response = await axios.get('${import.meta.env.VITE_API_URL}/texts/words');
+            response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/words`);
             const words = response.data;
             let wordCount = gameMode.value === 'time' ? 200 : wordSetting.value;
             const shuffled = words.sort(() => 0.5 - Math.random());
