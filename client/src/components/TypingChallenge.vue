@@ -198,7 +198,7 @@ const saveScore = async () => {
             accuracy: accuracy.value,
             mode: modeDescription
         };
-        await axios.post('${import.meta.env.VITE_API_URL}/scores/add', scoreData);
+        await axios.post(`${import.meta.env.VITE_API_URL}/scores/add`, scoreData);
         scoreSaved.value = true;
     } catch (error) {
         console.error("Error saving score:", error);
