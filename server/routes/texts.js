@@ -73,5 +73,9 @@ router.route('/add-many').post((req, res) => {
     .catch(err => res.status(400).json('Error: ' + err));
 });
 
+// Example fix for API URL construction
+const apiBase = import.meta.env.VITE_API_URL.replace(/\/$/, ''); // Remove trailing slash if present
+const response = await fetch(`${apiBase}/texts/words`);
+
 
 module.exports = router;
