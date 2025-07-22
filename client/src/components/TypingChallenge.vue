@@ -54,18 +54,20 @@ const typedWordCount = computed(() => {
 
 const setupChallenge = async () => {
     if (timerInterval) clearInterval(timerInterval);
-    
+
     try {
         let response;
+        // Remove trailing slash from API base URL
+        const apiBase = import.meta.env.VITE_API_URL.replace(/\/$/, '');
         if (gameMode.value === 'words' || gameMode.value === 'time') {
-            response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/words`);
+            response = await axios.get(`${apiBase}/texts/words`);
             const words = response.data;
             let wordCount = gameMode.value === 'time' ? 200 : wordSetting.value;
             const shuffled = words.sort(() => 0.5 - Math.random());
             const selectedWords = shuffled.slice(0, wordCount);
             textToType.value = selectedWords.join(' ');
         } else if (gameMode.value === 'quote') {
-            response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/random?category=${quoteSetting.value}`);
+            response = await axios.get(`${apiBase}/texts/random?category=${quoteSetting.value}`);
             textToType.value = response.data?.content || "No quotes of this length found.";
         }
     } catch (error) {
