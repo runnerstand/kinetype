@@ -72,9 +72,4 @@ router.route('/add-many').post((req, res) => {
     .catch(err => res.status(400).json('Error: ' + err));
 });
 
-// In your frontend code (e.g., src/api/texts.js or wherever you fetch)
-const apiBase = import.meta.env.VITE_API_URL.replace(/\/$/, ''); // Remove trailing slash
-const response = await fetch(`${apiBase}/texts/words`); // Correct single slash
-
-
 module.exports = router;
