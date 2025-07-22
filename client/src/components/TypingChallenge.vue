@@ -44,6 +44,7 @@ const accuracy = computed(() => {
     return Math.max(0, calculatedAccuracy);
 });
 
+// Word counter for 'words' mode
 const typedWordCount = computed(() => {
     return userInput.value.trim().split(/\s+/).filter(word => word.length > 0).length;
 });
@@ -53,18 +54,20 @@ const typedWordCount = computed(() => {
 
 const setupChallenge = async () => {
     if (timerInterval) clearInterval(timerInterval);
-    
+
     try {
         let response;
+        // Remove trailing slash from API base URL
+        const apiBase = import.meta.env.VITE_API_URL.replace(/\/$/, '');
         if (gameMode.value === 'words' || gameMode.value === 'time') {
-            response = await axios.get('http://localhost:5000/texts/words');
+            response = await axios.get(`${apiBase}/texts/words`);
             const words = response.data;
             let wordCount = gameMode.value === 'time' ? 200 : wordSetting.value;
             const shuffled = words.sort(() => 0.5 - Math.random());
             const selectedWords = shuffled.slice(0, wordCount);
             textToType.value = selectedWords.join(' ');
         } else if (gameMode.value === 'quote') {
-            response = await axios.get(`http://localhost:5000/texts/random?category=${quoteSetting.value}`);
+            response = await axios.get(`${apiBase}/texts/random?category=${quoteSetting.value}`);
             textToType.value = response.data?.content || "No quotes of this length found.";
         }
     } catch (error) {
@@ -99,20 +102,11 @@ const startTimer = () => {
 };
 
 const handleKeyDown = (event) => {
-    // Allow browser shortcuts like refresh (F5, Ctrl+R) to work
-    if (event.ctrlKey || event.metaKey || event.key === 'F5') {
-        return;
-    }
+    // Ignore keydown if focused on an input or textarea
+    const tag = document.activeElement.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
 
-    // If the target of the keypress is our name input, do nothing.
-    // This allows the user to type their name without interference.
-    if (event.target.classList.contains('name-input')) {
-        return;
-    }
-    
-    // If the game is over or paused, ignore typing in the main area.
-    if (gameStatus.value === 'finished' || gameStatus.value === 'paused') {
-        event.preventDefault();
+    if (event.ctrlKey || event.metaKey || event.key === 'F5') {
         return;
     }
 
@@ -130,6 +124,10 @@ const handleKeyDown = (event) => {
     }
     
     event.preventDefault();
+    
+    if (gameStatus.value === 'finished' || gameStatus.value === 'paused') {
+        return;
+    }
 
     if (gameStatus.value === 'ready' && isTypingKey) {
         gameStatus.value = 'inprogress';
@@ -171,12 +169,19 @@ const handleKeyDown = (event) => {
              characters.value.splice(currentIndex + 1, 1, { ...characters.value[currentIndex + 1], status: 'active' });
         }
 
+        // --- SCROLLING LOGIC (IMPROVED) ---
         nextTick(() => {
             const activeCharEl = textAreaRef.value.querySelector('.char.active');
             if (activeCharEl) {
                 const container = textAreaRef.value;
-                const scrollTarget = activeCharEl.offsetTop - (container.clientHeight / 2) + (activeCharEl.clientHeight / 2);
-                container.scrollTop = scrollTarget;
+                // Find the line (row) of the active character
+                const chars = Array.from(container.querySelectorAll('.char'));
+                let activeLineTop = activeCharEl.offsetTop;
+                // Scroll so the active line is at the top
+                container.scrollTo({
+                    top: activeLineTop,
+                    behavior: 'smooth'
+                });
             }
         });
     }
@@ -199,7 +204,7 @@ const saveScore = async () => {
             accuracy: accuracy.value,
             mode: modeDescription
         };
-        await axios.post('http://localhost:5000/scores/add', scoreData);
+        await axios.post(`${import.meta.env.VITE_API_URL}/scores/add`, scoreData);
         scoreSaved.value = true;
     } catch (error) {
         console.error("Error saving score:", error);
@@ -207,19 +212,24 @@ const saveScore = async () => {
     }
 };
 
+const selectMode = (mode) => {
+    gameMode.value = mode;
+    setupChallenge();
+};
+
 const selectTime = (time) => {
-    gameMode.value = 'time';
     timeSetting.value = time;
+    selectMode('time');
 };
 
 const selectWords = (words) => {
-    gameMode.value = 'words';
     wordSetting.value = words;
+    selectMode('words');
 };
 
 const selectQuoteLength = (length) => {
-    gameMode.value = 'quote';
     quoteSetting.value = length;
+    selectMode('quote');
 };
 
 const pauseGame = () => {
@@ -252,6 +262,7 @@ onUnmounted(() => {
 
 <template>
   <div class="typing-challenge-container">
+    <!-- Game Mode Options with Icons -->
     <div class="game-options">
       <div class="option-group">
         <div class="icon-wrapper" data-tooltip="time">
@@ -281,6 +292,7 @@ onUnmounted(() => {
       </div>
     </div>
 
+    <!-- Word/Time Counter Display -->
     <div v-if="gameMode === 'time' || gameMode === 'words'" class="timer-display">
       <span v-if="gameMode === 'time'">{{ timer }}</span>
       <span v-if="gameMode === 'words'">{{ typedWordCount }} / {{ wordSetting }}</span>
@@ -454,8 +466,8 @@ onUnmounted(() => {
   text-align: left;
   color: var(--color-text-secondary);
   cursor: text;
-  overflow: hidden;
-  max-height: 9rem;
+  overflow: hidden; /* FIX: Changed to hidden to prevent manual scrolling */
+  max-height: 9rem; /* Set to show 3 lines */
   position: relative;
 }
 
@@ -481,7 +493,7 @@ onUnmounted(() => {
 
 .char.incorrect {
   color: #e3342f;
-  background-color: rgba(227, 52, 47, 0.15);
+  background-color: rgba(224, 39, 33, 0.15);
 }
 
 .retry-button-container {
