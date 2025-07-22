@@ -46,7 +46,6 @@ router.route('/random').get(async (req, res) => {
   }
 });
 
-
 // --- ADD NEW TEXT (CREATE) ---
 router.route('/add').post((req, res) => {
   const content = req.body.content;
@@ -74,7 +73,7 @@ router.route('/add-many').post((req, res) => {
 });
 
 // Example fix for API URL construction
-const apiBase = import.meta.env.VITE_API_URL.replace(/\/$/, ''); // Remove trailing slash if present
+const apiBase = import.meta.env.VITE_API_URL.replace(/\/$/, '');
 const response = await fetch(`${apiBase}/texts/words`);
 
 
