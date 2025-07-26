@@ -66,14 +66,14 @@ const setupChallenge = async () => {
         let response;
         if (gameMode.value === 'words' || gameMode.value === 'time') {
             // Pass settings as query params to the API
-            response = await axios.get(`${apiBase}/texts/words?punctuation=${allowPunctuation.value}&numbers=${allowNumbers.value}`);
+            response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/words?punctuation=${allowPunctuation.value}&numbers=${allowNumbers.value}`);
             const words = response.data;
             let wordCount = gameMode.value === 'time' ? 200 : wordSetting.value;
             const shuffled = words.sort(() => 0.5 - Math.random());
             const selectedWords = shuffled.slice(0, wordCount);
             textToType.value = selectedWords.join(' ');
         } else if (gameMode.value === 'quote') {
-            response = await axios.get(`${apiBase}/texts/random?category=${quoteSetting.value}`);
+            response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/random?category=${quoteSetting.value}`);
             textToType.value = response.data?.content || "No quotes of this length found.";
         }
     } catch (error) {
