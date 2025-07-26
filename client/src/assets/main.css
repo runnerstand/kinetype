@@ -1,40 +1,6 @@
 /* This file will hold all our global styles and theme variables.
 */
 
-/* :root is where we define our CSS variables for the default theme.
-This is our "Slate & Sky" theme.
-*/
-:root {
-  --color-bg: #1A1D21;          /* Dark Slate Grey (Background) */
-  --color-surface: #24282F;      /* Lighter Grey (UI Panels) */
-  --color-text-primary: #E0E6F0; /* Soft Light Grey (Main Text) */
-  --color-text-secondary: #A9B5C6;/* Muted Grey (Subtle Text) */
-  --color-accent: #3891A6;       /* Muted Sky Blue (Primary Accent) */
-  --color-accent-hover: #4EADC4; /* Lighter Blue (for hover states) */
-  --font-family-main: 'Roboto Mono', monospace; /* Example font */
-}
-
-/* --- NEW: Light Theme Definition --- */
-.theme-light {
-  --color-bg: #F8F9FA;
-  --color-surface: #FFFFFF;
-  --color-text-primary: #212529;
-  --color-text-secondary: #6C757D;
-  --color-accent: #004E89;
-  --color-accent-hover: #0066B2;
-}
-
-/* --- NEW: Warm Dark Theme Definition --- */
-.theme-warm-dark {
-  --color-bg: #2C2A2A;
-  --color-surface: #3E3C3C;
-  --color-text-primary: #F2F2F2;
-  --color-text-secondary: #BDBDBD;
-  --color-accent: #FFBF00;
-  --color-accent-hover: #FFD24D;
-}
-
-
 /* Basic reset and global styles */
 *,
 *::before,
@@ -46,6 +12,17 @@ This is our "Slate & Sky" theme.
 }
 
 body {
+  /* --- Default Theme: Fabrik --- */
+  --color-bg: #1A1D21;
+  --color-surface: #24282F;
+  --color-text-primary: #E0E6F0;
+  --color-text-secondary: #A9B5C6;
+  --color-accent: #3891A6;
+  --color-accent-hover: #4EADC4;
+  --font-family-main: 'Roboto Mono', monospace;
+  --color-accent-text: var(--color-bg);
+
+
   min-height: 100vh;
   background: var(--color-bg);
   color: var(--color-text-primary);
@@ -53,8 +30,108 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  transition: background-color 0.3s ease, color 0.3s ease; /* Add smooth transition */
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
+
+/* --- Blue Alert Definition --- */
+body.theme-light {
+  --color-bg: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #212529;
+  --color-text-secondary: #6C757D;
+  --color-accent: #004E89;
+  --color-accent-hover: #0066B2;
+  --color-accent-text: #FFFFFF;
+}
+
+/* --- Black Gold Theme --- */
+body.theme-warm-dark {
+  --color-bg: #2C2A2A;
+  --color-surface: #3E3C3C;
+  --color-text-primary: #F2F2F2;
+  --color-text-secondary: #BDBDBD;
+  --color-accent: #FFBF00;
+  --color-accent-hover: #FFD24D;
+  --color-accent-text: #2C2A2A;
+}
+
+/* --- Synthwave Sunset Theme --- */
+body.theme-synthwave {
+    --color-bg: #1A1026;
+    --color-surface: #2A1A40;
+    --color-text-primary: #F0E6F0;
+    --color-text-secondary: #D9C2D9;
+    --color-accent: linear-gradient(90deg, #F000B8, #00F0FF);
+    --color-accent-hover: linear-gradient(90deg, #FF33C4, #33F3FF);
+    --color-accent-text: #1A1026;
+}
+
+/* --- Half Life Theme --- */
+body.theme-halflife {
+    --color-bg: #1E2A21;
+    --color-surface: #304032;
+    --color-text-primary: #E8E6D9;
+    --color-text-secondary: #B8B5A7;
+    --color-accent: #B89B49;
+    --color-accent-hover: #D4B25E;
+    --color-accent-text: #1E2A21;
+}
+
+/* --- Ocean Theme --- */
+body.theme-ocean {
+    --color-bg: #0D1B2A;
+    --color-surface: #1B263B;
+    --color-text-primary: #E0E1DD;
+    --color-text-secondary: #B9BAB6;
+    --color-accent: linear-gradient(90deg, #3D5A80, #98C1D9);
+    --color-accent-hover: linear-gradient(90deg, #4A6E9C, #A9D4E8);
+    --color-accent-text: #0D1B2A;
+}
+
+/* --- Mecha-01 Theme --- */
+body.theme-mecha01 {
+    --color-bg: #503289;               /* Alpha Base (approx. Pantone 267C - vivid purple) */
+    --color-surface: #181718;          /* Modifiers/Accent background (CR - deep black) */
+    --color-text-primary: #f78127;     /* Neon Green (approx. Pantone 802C) */
+    --color-text-secondary: #c3c3ba;   /* Soft gray for balance (T9) */
+    --color-accent: #44d62c;           /* Bonus accent - TU2 cyan if needed */
+    --color-accent-hover: #dd1126;     /* Optional hover - RO2 red */
+    --color-accent-text: #ffffff;      /* High contrast on accent */
+}
+
+/* --- DMG Theme --- */
+body.theme-dmg {
+    --color-bg: #f7f2ea;               /* Alpha base (light beige) */
+    --color-surface: #c6c9c7;          /* Modifier base (gray) */
+    --color-text-primary: #2e2e3a;     /* Legend (dark gray-violet) */
+    --color-text-secondary: #727474;   /* Toned-down gray (2B) */
+    --color-accent: #bc255e;           /* Magenta/purple accent (Return key) */
+    --color-accent-hover: #8d242f;     /* Darker red hover (RO1) */
+    --color-accent-text: #ffffff;      /* High contrast on accent */
+}
+
+/* --- Rainy Day Theme --- */
+body.theme-rainyday {
+    --color-bg: #b6b8ba;               /* Alpha base */
+    --color-surface: #9a9b9e;          /* Mod base */
+    --color-text-primary: #bafdff;     /* Alpha/Accent legends */
+    --color-text-secondary: #726e76;   /* Mod legend */
+    --color-accent: #2b3236;           /* Accent base */
+    --color-accent-hover: #727474;     /* Slightly darker for hover */
+    --color-accent-text: #ffffff;      /* For contrast when needed */
+}
+
+/* --- Wild Theme --- */
+body.theme-wild {
+    --color-bg: #393b3b;               /* Background (Alpha - N9) */
+    --color-surface: #aca693;          /* Surface (Modifiers - U9) */
+    --color-text-primary: #f7f2ea;     /* Brighter neutral for readability (WS1) */
+    --color-text-secondary: #c5c7ca;   /* Soft gray for subtle contrast (GR1) */
+    --color-accent: #4e7c5c;           /* Forest green accent (8721C approx.) */
+    --color-accent-hover: #9e3b32;     /* Earthy red accent (4100C approx.) */
+    --color-accent-text: #ffffff;      /* High contrast on accent areas */
+}
+
 
 /* Basic layout styles for App.vue */
 .app-container {
@@ -75,7 +152,10 @@ body {
 .logo h1 {
   font-size: 1.5rem;
   font-weight: bold;
-  color: var(--color-accent);
+  background: var(--color-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .main-nav a {
@@ -87,7 +167,7 @@ body {
 
 .main-nav a:hover,
 .main-nav a.router-link-exact-active {
-  color: var(--color-accent-hover);
+    color: var(--color-text-primary);
 }
 
 .main-content {

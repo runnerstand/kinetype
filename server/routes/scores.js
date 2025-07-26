@@ -24,6 +24,8 @@ router.route('/add').post((req, res) => {
   const wpm = Number(req.body.wpm);
   const accuracy = Number(req.body.accuracy);
   const mode = req.body.mode;
+  const punctuation = req.body.punctuation;
+  const numbers = req.body.numbers;
 
   // We create a new Score instance using the data from the request body.
   const newScore = new Score({
@@ -31,6 +33,8 @@ router.route('/add').post((req, res) => {
     wpm,
     accuracy,
     mode,
+    punctuation,
+    numbers,
   });
 
   // .save() is a Mongoose method that saves the new document to the database.
