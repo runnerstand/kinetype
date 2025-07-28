@@ -19,11 +19,6 @@ const quoteSetting = ref('medium');
 const timer = ref(timeSetting.value);
 let timerInterval = null;
 
-// --- NEW: Punctuation and Numbers State ---
-const allowPunctuation = ref(false);
-const allowNumbers = ref(false);
-const language = ref('en');
-
 // --- Score Saving State ---
 const playerName = ref("Player");
 const scoreSaved = ref(false);
@@ -49,7 +44,8 @@ const accuracy = computed(() => {
     return Math.max(0, calculatedAccuracy);
 });
 
-const typedWordCount = computed(() => { 
+// Word counter for 'words' mode
+const typedWordCount = computed(() => {
     return userInput.value.trim().split(/\s+/).filter(word => word.length > 0).length;
 });
 
@@ -59,29 +55,17 @@ const typedWordCount = computed(() => {
 const setupChallenge = async () => {
     if (timerInterval) clearInterval(timerInterval);
     
-    // Load settings from localStorage
-    allowPunctuation.value = localStorage.getItem('kinetype-punctuation') === 'true';
-    allowNumbers.value = localStorage.getItem('kinetype-numbers') === 'true';
-    language.value = localStorage.getItem('kinetype-language') || 'en';
-
     try {
         let response;
-        const params = {
-            punctuation: allowPunctuation.value,
-            numbers: allowNumbers.value,
-            language: language.value
-        };
         if (gameMode.value === 'words' || gameMode.value === 'time') {
-            // Pass settings as query params to the API
-            response = await axios.get(`https://kinetype.onrender.com/texts/words?punctuation=${allowPunctuation.value}&numbers=${allowNumbers.value}&language=${language.value}`);
+            response = await axios.get('http://localhost:5000/texts/words');
             const words = response.data;
             let wordCount = gameMode.value === 'time' ? 200 : wordSetting.value;
             const shuffled = words.sort(() => 0.5 - Math.random());
             const selectedWords = shuffled.slice(0, wordCount);
             textToType.value = selectedWords.join(' ');
         } else if (gameMode.value === 'quote') {
-            params.category = quoteSetting.value;
-            response = await axios.get(`https://kinetype.onrender.com/texts/random?category=${quoteSetting.value}&language=${language.value}`)
+            response = await axios.get(`http://localhost:5000/texts/random?category=${quoteSetting.value}`);
             textToType.value = response.data?.content || "No quotes of this length found.";
         }
     } catch (error) {
@@ -117,10 +101,6 @@ const startTimer = () => {
 
 const handleKeyDown = (event) => {
     if (event.ctrlKey || event.metaKey || event.key === 'F5') {
-        return;
-    }
-
-    if (event.target.classList.contains('name-input')) {
         return;
     }
 
@@ -183,12 +163,19 @@ const handleKeyDown = (event) => {
              characters.value.splice(currentIndex + 1, 1, { ...characters.value[currentIndex + 1], status: 'active' });
         }
 
+        // --- SCROLLING LOGIC (IMPROVED) ---
         nextTick(() => {
             const activeCharEl = textAreaRef.value.querySelector('.char.active');
             if (activeCharEl) {
                 const container = textAreaRef.value;
-                const scrollTarget = activeCharEl.offsetTop - (container.clientHeight / 2) + (activeCharEl.clientHeight / 2);
-                container.scrollTop = scrollTarget;
+                // Find the line (row) of the active character
+                const chars = Array.from(container.querySelectorAll('.char'));
+                let activeLineTop = activeCharEl.offsetTop;
+                // Scroll so the active line is at the top
+                container.scrollTo({
+                    top: activeLineTop,
+                    behavior: 'smooth'
+                });
             }
         });
     }
@@ -209,13 +196,9 @@ const saveScore = async () => {
             playerName: playerName.value,
             wpm: wpm.value,
             accuracy: accuracy.value,
-            mode: modeDescription,
-            // Include the settings when saving the score
-            punctuation: allowPunctuation.value,
-            numbers: allowNumbers.value,
-            language: language.value
+            mode: modeDescription
         };
-        await axios.post(`https://kinetype.onrender.com/scores/add`, scoreData);
+        await axios.post('http://localhost:5000/scores/add', scoreData);
         scoreSaved.value = true;
     } catch (error) {
         console.error("Error saving score:", error);
@@ -223,29 +206,24 @@ const saveScore = async () => {
     }
 };
 
+const selectMode = (mode) => {
+    gameMode.value = mode;
+    setupChallenge();
+};
+
 const selectTime = (time) => {
-    gameMode.value = 'time';
     timeSetting.value = time;
-    setupChallenge(); // Add this line
+    selectMode('time');
 };
 
 const selectWords = (words) => {
-    gameMode.value = 'words';
     wordSetting.value = words;
-    setupChallenge(); // Add this line
+    selectMode('words');
 };
 
 const selectQuoteLength = (length) => {
-    gameMode.value = 'quote';
     quoteSetting.value = length;
-    // Force disable punctuation and numbers for quote mode
-    if (allowPunctuation.value || allowNumbers.value) {
-        allowPunctuation.value = false;
-        allowNumbers.value = false;
-        onSettingChange();
-    } else {
-        setupChallenge();
-    }
+    selectMode('quote');
 };
 
 const pauseGame = () => {
@@ -258,27 +236,6 @@ const resumeGame = () => {
     if (gameStatus.value === 'paused') {
         gameStatus.value = 'inprogress';
     }
-};
-
-const onSettingChange = () => {
-  localStorage.setItem('kinetype-punctuation', allowPunctuation.value);
-  localStorage.setItem('kinetype-numbers', allowNumbers.value);
-  localStorage.setItem('kinetype-language', language.value);
-  setupChallenge();
-};
-
-const selectLanguage = (lang) => {
-    language.value = lang;
-    onSettingChange();
-};
-
-const togglePunctuation = () => {
-  allowPunctuation.value = !allowPunctuation.value;
-  onSettingChange();
-};
-const toggleNumbers = () => {
-  allowNumbers.value = !allowNumbers.value;
-  onSettingChange();
 };
 
 onMounted(() => {
@@ -302,7 +259,6 @@ onUnmounted(() => {
     <!-- Game Mode Options with Icons -->
     <div class="game-options">
       <div class="option-group">
-        <!-- Time mode buttons -->
         <div class="icon-wrapper" data-tooltip="time">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
         </div>
@@ -312,7 +268,6 @@ onUnmounted(() => {
         <button @click="selectTime(120)" :class="{active: gameMode === 'time' && timeSetting === 120}" class="option-button">120</button>
       </div>
       <div class="option-group">
-        <!-- Words mode buttons -->
         <div class="icon-wrapper" data-tooltip="words">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 6.1H3M17 12.1H3M10 18.1H3"/></svg>
         </div>
@@ -322,50 +277,12 @@ onUnmounted(() => {
         <button @click="selectWords(100)" :class="{active: gameMode === 'words' && wordSetting === 100}" class="option-button">100</button>
       </div>
       <div class="option-group">
-        <!-- Quote mode buttons -->
         <div class="icon-wrapper" data-tooltip="quote">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.75-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c.25 0 .25 .25.25 1v1c0 1-.75 2-1.75 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/></svg>
         </div>
         <button @click="selectQuoteLength('small')" :class="{active: gameMode === 'quote' && quoteSetting === 'small'}" class="option-button">small</button>
         <button @click="selectQuoteLength('medium')" :class="{active: gameMode === 'quote' && quoteSetting === 'medium'}" class="option-button">medium</button>
         <button @click="selectQuoteLength('long')" :class="{active: gameMode === 'quote' && quoteSetting === 'long'}" class="option-button">long</button>
-      </div>
-      <div class="option-group">
-        <div class="icon-wrapper" data-tooltip="language">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        </div>
-        <button @click="selectLanguage('en')" :class="{active: language === 'en'}" class="option-button">english</button>
-        <button @click="selectLanguage('vn')" :class="{active: language === 'vn'}" class="option-button">vietnamese</button>
-        <button @click="selectLanguage('es')" :class="{active: language === 'es'}" class="option-button">español</button>
-      </div>
-      <div class="option-group" v-if="gameMode !== 'quote'">
-        <!-- Punctuation and Numbers toggles -->
-        <button
-          class="option-button"
-          :class="{ active: allowPunctuation }"
-          @click="togglePunctuation"
-          type="button"
-          style="display: flex; align-items: center; gap: 0.4rem;"
-        >
-          <div class="icon-wrapper" data-tooltip="punctuation">
-            <!-- SVG for @ (at symbol) -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path></svg>
-          </div>
-          punctuation
-        </button>
-        <button
-          class="option-button"
-          :class="{ active: allowNumbers }"
-          @click="toggleNumbers"
-          type="button"
-          style="display: flex; align-items: center; gap: 0.4rem;"
-        >
-          <div class="icon-wrapper" data-tooltip="numbers">
-            <!-- SVG for # (hash symbol) -->
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="9" x2="20" y2="9"></line><line x1="4" y1="15" x2="20" y2="15"></line><line x1="10" y1="3" x2="8" y2="21"></line><line x1="16" y1="3" x2="14" y2="21"></line></svg>
-          </div>
-          numbers
-        </button>
       </div>
     </div>
 
@@ -390,8 +307,8 @@ onUnmounted(() => {
         </div>
     </div>
 
-    <div class="retry-button-container" data-tooltip="Get new text (Tab)">
-        <button @click="setupChallenge" class="retry-button">
+    <div class="retry-button-container">
+        <button @click="setupChallenge" class="retry-button" title="Get new text (Tab)">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
             </svg>
@@ -459,6 +376,7 @@ onUnmounted(() => {
 
 .icon-wrapper {
   position: relative;
+  color: var(--color-text-secondary);
   display: flex;
   align-items: center;
 }
@@ -542,8 +460,8 @@ onUnmounted(() => {
   text-align: left;
   color: var(--color-text-secondary);
   cursor: text;
-  overflow: hidden;
-  max-height: 9rem;
+  overflow: hidden; /* FIX: Changed to hidden to prevent manual scrolling */
+  max-height: 9rem; /* Set to show 3 lines */
   position: relative;
 }
 
@@ -569,36 +487,12 @@ onUnmounted(() => {
 
 .char.incorrect {
   color: #e3342f;
-  background-color: rgba(227, 52, 47, 0.15);
+  background-color: rgba(224, 39, 33, 0.15);
 }
 
 .retry-button-container {
     margin-top: -1rem;
     margin-bottom: -1rem;
-    position: relative;
-}
-
-.retry-button-container::after {
-  content: attr(data-tooltip);
-  position: absolute;
-  top: 50%;
-  left: calc(100% + 10px);
-  transform: translateY(-50%);
-  background-color: var(--color-surface);
-  color: var(--color-text-primary);
-  padding: 0.4rem 0.8rem;
-  border-radius: 5px;
-  font-size: 0.85rem;
-  white-space: nowrap;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.2s ease, visibility 0.2s ease;
-  z-index: 20;
-}
-
-.retry-button-container:hover::after {
-  opacity: 1;
-  visibility: visible;
 }
 
 .retry-button {

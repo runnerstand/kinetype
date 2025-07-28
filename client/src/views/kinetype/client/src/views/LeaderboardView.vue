@@ -9,14 +9,26 @@ const isLoading = ref(true);
 // Create a state for errors.
 const error = ref(null);
 
+// --- NEW: Filter State ---
+const filters = ref({
+  language: 'all',
+  mode: 'all',
+  timeline: 'all'
+});
+
 // This function will fetch the scores from our back-end API.
 const fetchScores = async () => {
   try {
     isLoading.value = true;
     error.value = null;
-    const response = await axios.get('http://localhost:5000/scores');
-    // Sort scores by WPM in descending order before storing them.
-    scores.value = response.data.sort((a, b) => b.wpm - a.wpm);
+    const params = {
+      language: filters.value.language,
+      mode: filters.value.mode,
+      timeline: filters.value.timeline
+    };
+    const response = await axios.get(`${import.meta.env.VITE_API_URL}/scores`);
+    // The backend now handles sorting, so we can remove it from the frontend.
+    scores.value = response.data;
   } catch (err) {
     console.error("Error fetching scores:", err);
     error.value = "Failed to load leaderboard. Please try again.";
@@ -37,13 +49,39 @@ onMounted(() => {
   <div class="leaderboard-container">
     <h1 class="title">Leaderboard</h1>
 
-    <!-- Show a loading message while fetching data -->
-    <div v-if="isLoading" class="loading-message">Loading scores...</div>
+    <div class="filters-container">
+      <div class="filter-group">
+        <label for="language-filter">Language</label>
+        <select id="language-filter" v-model="filters.language" @change="fetchScores">
+          <option value="all">All</option>
+          <option value="en">English</option>
+          <option value="vn">Vietnamese</option>
+          <option value="es">Español</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="mode-filter">Mode</label>
+        <select id="mode-filter" v-model="filters.mode" @change="fetchScores">
+          <option value="all">All</option>
+          <option value="time">Time</option>
+          <option value="words">Words</option>
+          <option value="quote">Quote</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="timeline-filter">Timeline</label>
+        <select id="timeline-filter" v-model="filters.timeline" @change="fetchScores">
+          <option value="all">All Time</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+    </div>
 
-    <!-- Show an error message if the API call fails -->
+    <div v-if="isLoading" class="loading-message">Loading scores...</div>
     <div v-if="error" class="error-message">{{ error }}</div>
 
-    <!-- Display the leaderboard table if data is loaded successfully -->
     <div v-if="!isLoading && !error && scores.length > 0" class="scores-table-wrapper">
       <table class="scores-table">
         <thead>
@@ -53,6 +91,8 @@ onMounted(() => {
             <th>WPM</th>
             <th>Accuracy</th>
             <th>Mode</th>
+            <th>Mods</th>
+            <th>Language</th>
             <th>Date</th>
           </tr>
         </thead>
@@ -63,13 +103,19 @@ onMounted(() => {
             <td>{{ score.wpm }}</td>
             <td>{{ score.accuracy }}%</td>
             <td>{{ score.mode }}</td>
+            <td>
+              <div class="mods-pills">
+                <div :class="['mods-pill', score.punctuation ? 'enabled' : 'disabled']" title="Punctuation">@</div>
+                <div :class="['mods-pill', score.numbers ? 'enabled' : 'disabled']" title="Numbers">#</div>
+              </div>
+            </td>
+            <td>{{ score.language }}</td>
             <td>{{ new Date(score.createdAt).toLocaleDateString() }}</td>
           </tr>
         </tbody>
       </table>
     </div>
     
-    <!-- Show a message if there are no scores to display -->
     <div v-if="!isLoading && !error && scores.length === 0" class="no-scores-message">
       No scores have been saved yet. Be the first!
     </div>
@@ -87,9 +133,41 @@ onMounted(() => {
 .title {
   font-size: 2rem;
   font-weight: bold;
-  color: var(--color-accent);
-  margin-bottom: 2rem;
+  background: var(--color-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 1rem;
   text-align: center;
+}
+
+.filters-container {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.filter-group select {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-text-secondary);
+  border-radius: 5px;
+  padding: 0.5rem;
+  font-family: var(--font-family-main);
 }
 
 .loading-message, .error-message, .no-scores-message {
@@ -107,6 +185,7 @@ onMounted(() => {
   background-color: var(--color-surface);
   border-radius: 8px;
   padding: 1rem;
+  overflow-x: auto; /* Allow horizontal scrolling on small screens */
 }
 
 .scores-table {
@@ -117,6 +196,7 @@ onMounted(() => {
 .scores-table th, .scores-table td {
   padding: 0.75rem 1rem;
   text-align: left;
+  white-space: nowrap;
 }
 
 .scores-table thead {
@@ -135,5 +215,34 @@ onMounted(() => {
 
 .scores-table td {
   color: var(--color-text-primary);
+}
+
+.mods-pills {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+/* --- NEW: mods Pill Styles --- */
+.mods-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.8rem;
+    border-radius: 9999px; /* This creates the pill shape */
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.mods-pill.enabled {
+    background: var(--color-accent);
+    color: var(--color-accent-text);
+}
+
+.mods-pill.disabled {
+    background-color: var(--color-bg);
+    color: var(--color-text-secondary);
+    opacity: 0.6;
 }
 </style>

@@ -12,19 +12,13 @@ const textSchema = new Schema({
     trim: true,
     minlength: 1 // Ensure content is not empty
   },
-  language: {
-    type: String,
-    required: true,
-    trim: true,
-    default: 'en'
-  },
   // 'category' helps us organize our texts.
   category: {
     type: String,
     required: true,
     trim: true,
     // 'enum' ensures that the category can only be one of these values.
-    enum: ['quote', 'word', 'punctuation', 'number', 'small', 'medium', 'long']
+    enum: ['quote', 'word', 'punctuation', 'small', 'medium', 'long']
   }
 }, {
   timestamps: true,

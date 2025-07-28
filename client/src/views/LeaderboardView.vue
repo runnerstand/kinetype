@@ -26,7 +26,7 @@ const fetchScores = async () => {
       mode: filters.value.mode,
       timeline: filters.value.timeline
     };
-    const response = await axios.get(`${import.meta.env.VITE_API_URL}/scores`);
+    const response = await axios.get(`https://kinetype.onrender.com/scores`, { params });
     // The backend now handles sorting, so we can remove it from the frontend.
     scores.value = response.data;
   } catch (err) {

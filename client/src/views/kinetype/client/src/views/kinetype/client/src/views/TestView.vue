@@ -10,7 +10,7 @@ const isLoading = ref(false);
 const getAllScores = async () => {
   isLoading.value = true;
   try {
-    const response = await axios.get(`${import.meta.env.VITE_API_URL}/scores`);
+    const response = await axios.get('http://localhost:5000/scores');
     apiResponse.value = response.data;
   } catch (error) {
     apiResponse.value = { error: 'Failed to fetch scores', details: error.message };
@@ -25,7 +25,7 @@ const getAllTexts = async () => {
   try {
     // Note: We don't have a GET all texts route yet, we will add it.
     // For now, this will call the random endpoint.
-    const response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/random`);
+    const response = await axios.get('http://localhost:5000/texts/random');
     apiResponse.value = response.data;
   } catch (error) {
     apiResponse.value = { error: 'Failed to fetch texts', details: error.message };
@@ -44,7 +44,7 @@ const addTestScore = async () => {
     mode: "test"
   };
   try {
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/scores/add`, testScore);
+    const response = await axios.post('http://localhost:5000/scores/add', testScore);
     apiResponse.value = response.data;
   } catch (error) {
     apiResponse.value = { error: 'Failed to add score', details: error.message };
