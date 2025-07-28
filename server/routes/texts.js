@@ -4,11 +4,8 @@ let Text = require('../models/text.model');
 // --- UPDATED: GET A LIST OF WORDS FROM THE DATABASE ---
 router.route('/words').get(async (req, res) => {
   try {
-    const { punctuation, numbers } = req.query;
+    const { punctuation, numbers, language = 'en' } = req.query;
 
-    // Start with a base filter for regular words
-    const filter = { category: 'word' };
-    
     // Build an array of categories to fetch
     const categories = ['word'];
     if (punctuation === 'true') {
@@ -18,8 +15,22 @@ router.route('/words').get(async (req, res) => {
       categories.push('number');
     }
 
-    // Find all texts that match any of the selected categories
-    const texts = await Text.find({ category: { $in: categories } });
+    // Build the query
+    const query = {
+      $or: [
+        { language: language, category: 'word' }
+      ]
+    };
+
+    if (punctuation === 'true') {
+      query.$or.push({ language: 'any', category: 'punctuation' });
+    }
+    if (numbers === 'true') {
+      query.$or.push({ language: 'any', category: 'number' });
+    }
+
+    // Find all texts that match the query
+    const texts = await Text.find(query);
     
     const wordList = texts.map(text => text.content);
     res.json(wordList);
@@ -40,8 +51,14 @@ router.route('/').get((req, res) => {
 // --- GET A RANDOM TEXT (for Quote/Time Mode) ---
 router.route('/random').get(async (req, res) => {
   try {
-    const { category } = req.query;
-    const filter = category ? { category } : { category: { $in: ['quote', 'small', 'medium', 'long'] } };
+    const { category, language = 'en' } = req.query;
+    // For quotes, we still want to filter by the specific language
+    const filter = { language: language };
+    if (category) {
+      filter.category = category;
+    } else {
+      filter.category = { $in: ['quote', 'small', 'medium', 'long'] };
+    }
     const count = await Text.countDocuments(filter);
     if (count === 0) {
       return res.status(404).json('No texts found for the specified criteria.');
@@ -56,9 +73,8 @@ router.route('/random').get(async (req, res) => {
 
 // --- ADD NEW TEXT (CREATE) ---
 router.route('/add').post((req, res) => {
-  const content = req.body.content;
-  const category = req.body.category;
-  const newText = new Text({ content, category });
+  const { content, category, language } = req.body;
+  const newText = new Text({ content, category, language });
   newText.save()
     .then(() => res.json('Text added!'))
     .catch(err => res.status(400).json('Error: ' + err));

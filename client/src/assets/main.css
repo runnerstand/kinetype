@@ -132,6 +132,49 @@ body.theme-wild {
     --color-accent-text: #ffffff;      /* High contrast on accent areas */
 }
 
+/* --- Poco Theme --- */
+body.theme-poco {
+    --color-bg: #fdf6f8;               /* Alpha base - creamy pinkish white */
+    --color-surface: #fcd6dc;          /* Modifier base - pastel pink */
+    --color-text-primary: #6a50a7;     /* Legend purple */
+    --color-text-secondary: #91867a;   /* Optional subtle gray for contrast */
+    --color-accent: #373f93;           /* Dark purple/navy novelty */
+    --color-accent-hover: #5c4ea1;     /* Slightly lighter hover purple */
+    --color-accent-text: #ffffff;      /* Contrast text for dark accent */
+}
+
+/* --- Red Samurai Theme --- */
+body.theme-red-samurai {
+    --color-bg: #651e30;               /* Alpha base (deep red) */
+    --color-surface: #2b2b2c;          /* Modifier base (dark charcoal) */
+    --color-text-primary: #cba85a;     /* Primary text (gold legend) */
+    --color-text-secondary: #9b9284;   /* Optional softer gray for contrast */
+    --color-accent: #cba85a;           /* Accent keys (gold) */
+    --color-accent-hover: #e5c16b;     /* Slightly lighter gold hover */
+    --color-accent-text: #ffffff;      /* Accent text for contrast */
+}
+
+/* --- British Racing Theme --- */
+body.theme-british-racing {
+    --color-bg: #f0ede4;               /* Ivory base */
+    --color-surface: #0f5132;          /* Racing green modifiers */
+    --color-text-primary: #084c41;     /* Deep green for alpha legends */
+    --color-text-secondary: #c5c7ca;   /* Optional subtle gray text */
+    --color-accent: #cba85a;           /* Gold accent (Enter/Esc) */
+    --color-accent-hover: #e1c96a;     /* Lighter hover gold */
+    --color-accent-text: #0f5132;      /* Contrast green on gold accent */
+}
+
+/* --- Oblivion Theme --- */
+body.theme-oblivion {
+    --color-bg: #4f4f4f;               /* Alpha base - cool gray */
+    --color-surface: #393b3b;          /* Mod base - dark charcoal */
+    --color-text-primary: #e1dbd1;     /* Main legend - soft neutral */
+    --color-text-secondary: #626a6c;   /* Modifier text - desaturated blue/gray */
+    --color-accent: #9d9a93;           /* Accent - green (Push/Commit) */
+    --color-accent-hover: #f39c12;     /* Accent hover - yellow/orange (Add/Checkout) */
+    --color-accent-text: #ffffff;      /* High contrast accent text */
+}
 
 /* Basic layout styles for App.vue */
 .app-container {

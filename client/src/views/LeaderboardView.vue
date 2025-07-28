@@ -9,14 +9,26 @@ const isLoading = ref(true);
 // Create a state for errors.
 const error = ref(null);
 
+// --- NEW: Filter State ---
+const filters = ref({
+  language: 'all',
+  mode: 'all',
+  timeline: 'all'
+});
+
 // This function will fetch the scores from our back-end API.
 const fetchScores = async () => {
   try {
     isLoading.value = true;
     error.value = null;
+    const params = {
+      language: filters.value.language,
+      mode: filters.value.mode,
+      timeline: filters.value.timeline
+    };
     const response = await axios.get(`${import.meta.env.VITE_API_URL}/scores`);
-    // Sort scores by WPM in descending order before storing them.
-    scores.value = response.data.sort((a, b) => b.wpm - a.wpm);
+    // The backend now handles sorting, so we can remove it from the frontend.
+    scores.value = response.data;
   } catch (err) {
     console.error("Error fetching scores:", err);
     error.value = "Failed to load leaderboard. Please try again.";
@@ -37,6 +49,36 @@ onMounted(() => {
   <div class="leaderboard-container">
     <h1 class="title">Leaderboard</h1>
 
+    <div class="filters-container">
+      <div class="filter-group">
+        <label for="language-filter">Language</label>
+        <select id="language-filter" v-model="filters.language" @change="fetchScores">
+          <option value="all">All</option>
+          <option value="en">English</option>
+          <option value="vn">Vietnamese</option>
+          <option value="es">Español</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="mode-filter">Mode</label>
+        <select id="mode-filter" v-model="filters.mode" @change="fetchScores">
+          <option value="all">All</option>
+          <option value="time">Time</option>
+          <option value="words">Words</option>
+          <option value="quote">Quote</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="timeline-filter">Timeline</label>
+        <select id="timeline-filter" v-model="filters.timeline" @change="fetchScores">
+          <option value="all">All Time</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+      </div>
+    </div>
+
     <div v-if="isLoading" class="loading-message">Loading scores...</div>
     <div v-if="error" class="error-message">{{ error }}</div>
 
@@ -49,8 +91,9 @@ onMounted(() => {
             <th>WPM</th>
             <th>Accuracy</th>
             <th>Mode</th>
-            <th>Date</th>
             <th>Mods</th>
+            <th>Language</th>
+            <th>Date</th>
           </tr>
         </thead>
         <tbody>
@@ -60,18 +103,14 @@ onMounted(() => {
             <td>{{ score.wpm }}</td>
             <td>{{ score.accuracy }}%</td>
             <td>{{ score.mode }}</td>
-            <td>{{ new Date(score.createdAt).toLocaleDateString() }}</td>
             <td>
-              <!-- UPDATED: mods pills with conditional styling -->
               <div class="mods-pills">
-                <div :class="['mods-pill', score.punctuation ? 'enabled' : 'disabled']">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><path d="M16 8v5a3 3 0 0 0 6 0v-1a10 10 0 1 0-3.92 7.94"></path></svg>
-                </div>
-                <div :class="['mods-pill', score.numbers ? 'enabled' : 'disabled']">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16"/><path d="M4 14h16"/><path d="M10 4l-2 16"/><path d="M16 4l-2 16"/></svg>
-                </div>
+                <div :class="['mods-pill', score.punctuation ? 'enabled' : 'disabled']" title="Punctuation">@</div>
+                <div :class="['mods-pill', score.numbers ? 'enabled' : 'disabled']" title="Numbers">#</div>
               </div>
             </td>
+            <td>{{ score.language }}</td>
+            <td>{{ new Date(score.createdAt).toLocaleDateString() }}</td>
           </tr>
         </tbody>
       </table>
@@ -98,8 +137,37 @@ onMounted(() => {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
   text-align: center;
+}
+
+.filters-container {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.9rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.filter-group select {
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  border: 1px solid var(--color-text-secondary);
+  border-radius: 5px;
+  padding: 0.5rem;
+  font-family: var(--font-family-main);
 }
 
 .loading-message, .error-message, .no-scores-message {

@@ -31,6 +31,10 @@ const scoreSchema = new Schema({
   numbers: {
     type: Boolean,
     default: false
+  },
+  language: {
+    type: String,
+    default: 'en'
   }
 }, {
   timestamps: true,

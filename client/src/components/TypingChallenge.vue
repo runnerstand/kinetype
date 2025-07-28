@@ -22,6 +22,7 @@ let timerInterval = null;
 // --- NEW: Punctuation and Numbers State ---
 const allowPunctuation = ref(false);
 const allowNumbers = ref(false);
+const language = ref('en');
 
 // --- Score Saving State ---
 const playerName = ref("Player");
@@ -48,7 +49,7 @@ const accuracy = computed(() => {
     return Math.max(0, calculatedAccuracy);
 });
 
-const typedWordCount = computed(() => {
+const typedWordCount = computed(() => { 
     return userInput.value.trim().split(/\s+/).filter(word => word.length > 0).length;
 });
 
@@ -61,9 +62,15 @@ const setupChallenge = async () => {
     // Load settings from localStorage
     allowPunctuation.value = localStorage.getItem('kinetype-punctuation') === 'true';
     allowNumbers.value = localStorage.getItem('kinetype-numbers') === 'true';
+    language.value = localStorage.getItem('kinetype-language') || 'en';
 
     try {
         let response;
+        const params = {
+            punctuation: allowPunctuation.value,
+            numbers: allowNumbers.value,
+            language: language.value
+        };
         if (gameMode.value === 'words' || gameMode.value === 'time') {
             // Pass settings as query params to the API
             response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/words?punctuation=${allowPunctuation.value}&numbers=${allowNumbers.value}`);
@@ -73,7 +80,8 @@ const setupChallenge = async () => {
             const selectedWords = shuffled.slice(0, wordCount);
             textToType.value = selectedWords.join(' ');
         } else if (gameMode.value === 'quote') {
-            response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/random?category=${quoteSetting.value}`);
+            params.category = quoteSetting.value;
+            response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/random?category=${quoteSetting.value}`)
             textToType.value = response.data?.content || "No quotes of this length found.";
         }
     } catch (error) {
@@ -204,7 +212,8 @@ const saveScore = async () => {
             mode: modeDescription,
             // Include the settings when saving the score
             punctuation: allowPunctuation.value,
-            numbers: allowNumbers.value
+            numbers: allowNumbers.value,
+            language: language.value
         };
         await axios.post(`${import.meta.env.VITE_API_URL}/scores/add`, scoreData);
         scoreSaved.value = true;
@@ -254,7 +263,13 @@ const resumeGame = () => {
 const onSettingChange = () => {
   localStorage.setItem('kinetype-punctuation', allowPunctuation.value);
   localStorage.setItem('kinetype-numbers', allowNumbers.value);
+  localStorage.setItem('kinetype-language', language.value);
   setupChallenge();
+};
+
+const selectLanguage = (lang) => {
+    language.value = lang;
+    onSettingChange();
 };
 
 const togglePunctuation = () => {
@@ -315,6 +330,14 @@ onUnmounted(() => {
         <button @click="selectQuoteLength('medium')" :class="{active: gameMode === 'quote' && quoteSetting === 'medium'}" class="option-button">medium</button>
         <button @click="selectQuoteLength('long')" :class="{active: gameMode === 'quote' && quoteSetting === 'long'}" class="option-button">long</button>
       </div>
+      <div class="option-group">
+        <div class="icon-wrapper" data-tooltip="language">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        </div>
+        <button @click="selectLanguage('en')" :class="{active: language === 'en'}" class="option-button">english</button>
+        <button @click="selectLanguage('vn')" :class="{active: language === 'vn'}" class="option-button">vietnamese</button>
+        <button @click="selectLanguage('es')" :class="{active: language === 'es'}" class="option-button">español</button>
+      </div>
       <div class="option-group" v-if="gameMode !== 'quote'">
         <!-- Punctuation and Numbers toggles -->
         <button
@@ -367,8 +390,8 @@ onUnmounted(() => {
         </div>
     </div>
 
-    <div class="retry-button-container">
-        <button @click="setupChallenge" class="retry-button" title="Get new text (Tab)">
+    <div class="retry-button-container" data-tooltip="Get new text (Tab)">
+        <button @click="setupChallenge" class="retry-button">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
             </svg>
@@ -552,6 +575,30 @@ onUnmounted(() => {
 .retry-button-container {
     margin-top: -1rem;
     margin-bottom: -1rem;
+    position: relative;
+}
+
+.retry-button-container::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 10px);
+  transform: translateY(-50%);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  padding: 0.4rem 0.8rem;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  z-index: 20;
+}
+
+.retry-button-container:hover::after {
+  opacity: 1;
+  visibility: visible;
 }
 
 .retry-button {
