@@ -73,7 +73,7 @@ const setupChallenge = async () => {
         };
         if (gameMode.value === 'words' || gameMode.value === 'time') {
             // Pass settings as query params to the API
-            response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/words?punctuation=${allowPunctuation.value}&numbers=${allowNumbers.value}`);
+            response = await axios.get(`https://kinetype.onrender.com/texts/words?punctuation=${allowPunctuation.value}&numbers=${allowNumbers.value}&language=${language.value}`);
             const words = response.data;
             let wordCount = gameMode.value === 'time' ? 200 : wordSetting.value;
             const shuffled = words.sort(() => 0.5 - Math.random());
@@ -81,7 +81,7 @@ const setupChallenge = async () => {
             textToType.value = selectedWords.join(' ');
         } else if (gameMode.value === 'quote') {
             params.category = quoteSetting.value;
-            response = await axios.get(`${import.meta.env.VITE_API_URL}/texts/random?category=${quoteSetting.value}`)
+            response = await axios.get(`https://kinetype.onrender.com/texts/random?category=${quoteSetting.value}&language=${language.value}`)
             textToType.value = response.data?.content || "No quotes of this length found.";
         }
     } catch (error) {
@@ -215,7 +215,7 @@ const saveScore = async () => {
             numbers: allowNumbers.value,
             language: language.value
         };
-        await axios.post(`${import.meta.env.VITE_API_URL}/scores/add`, scoreData);
+        await axios.post(`https://kinetype.onrender.com/scores/add`, scoreData);
         scoreSaved.value = true;
     } catch (error) {
         console.error("Error saving score:", error);
