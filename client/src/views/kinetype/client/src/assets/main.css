@@ -1,0 +1,96 @@
+/* This file will hold all our global styles and theme variables.
+*/
+
+/* :root is where we define our CSS variables for the default theme.
+This is our "Slate & Sky" theme.
+*/
+:root {
+  --color-bg: #1A1D21;          /* Dark Slate Grey (Background) */
+  --color-surface: #24282F;      /* Lighter Grey (UI Panels) */
+  --color-text-primary: #E0E6F0; /* Soft Light Grey (Main Text) */
+  --color-text-secondary: #A9B5C6;/* Muted Grey (Subtle Text) */
+  --color-accent: #3891A6;       /* Muted Sky Blue (Primary Accent) */
+  --color-accent-hover: #4EADC4; /* Lighter Blue (for hover states) */
+  --font-family-main: 'Roboto Mono', monospace; /* Example font */
+}
+
+/* --- NEW: Light Theme Definition --- */
+.theme-light {
+  --color-bg: #F8F9FA;
+  --color-surface: #FFFFFF;
+  --color-text-primary: #212529;
+  --color-text-secondary: #6C757D;
+  --color-accent: #004E89;
+  --color-accent-hover: #0066B2;
+}
+
+/* --- NEW: Warm Dark Theme Definition --- */
+.theme-warm-dark {
+  --color-bg: #2C2A2A;
+  --color-surface: #3E3C3C;
+  --color-text-primary: #F2F2F2;
+  --color-text-secondary: #BDBDBD;
+  --color-accent: #FFBF00;
+  --color-accent-hover: #FFD24D;
+}
+
+
+/* Basic reset and global styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  position: relative;
+  font-weight: normal;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-family-main);
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s ease, color 0.3s ease; /* Add smooth transition */
+}
+
+/* Basic layout styles for App.vue */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--color-surface);
+  transition: border-color 0.3s ease;
+}
+
+.logo h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--color-accent);
+}
+
+.main-nav a {
+  color: var(--color-text-secondary);
+  text-decoration: none;
+  margin-left: 1.5rem;
+  transition: color 0.3s ease;
+}
+
+.main-nav a:hover,
+.main-nav a.router-link-exact-active {
+  color: var(--color-accent-hover);
+}
+
+.main-content {
+  flex-grow: 1;
+  padding: 2rem;
+}

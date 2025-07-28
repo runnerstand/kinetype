@@ -20,8 +20,8 @@ const router = createRouter({
     },
     // We can add the settings page route here later
     {
-      path: '/settings',
-      name: 'settings',
+      path: '/theme',
+      name: 'theme',
       // For now, let's just create a simple placeholder component for settings
       component: () => import('../views/ThemeView.vue') // We will create this file next
     }
