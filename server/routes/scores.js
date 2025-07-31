@@ -53,18 +53,25 @@ router.route('/').get(async (req, res) => {
 // -----------------------------------------------------------------------------
 // This handles POST requests to the /scores/add URL.
 router.route('/add').post((req, res) => {
-  // The data for the new score will be in the request body (req.body).
-  const playerName = req.body.playerName;
-  const wpm = Number(req.body.wpm);
-  const accuracy = Number(req.body.accuracy);
-  const mode = req.body.mode;
-  const punctuation = req.body.punctuation;
-  const numbers = req.body.numbers;
-  const language = req.body.language;
+  const { playerName, wpm, accuracy, mode, punctuation, numbers, language } = req.body;
 
-  // We create a new Score instance using the data from the request body.
+  // --- Server-side Validation ---
+  const MIN_WPM_THRESHOLD = 10;
+  const MIN_ACCURACY_THRESHOLD = 50;
+  const MAX_WPM_THRESHOLD = 300;
+
+  if (!playerName || typeof playerName !== 'string' || playerName.trim().length === 0) {
+    return res.status(400).json('Error: Player name is required.');
+  }
+  if (wpm === undefined || typeof wpm !== 'number' || wpm < MIN_WPM_THRESHOLD || wpm > MAX_WPM_THRESHOLD) {
+    return res.status(400).json(`Error: WPM must be between ${MIN_WPM_THRESHOLD} and ${MAX_WPM_THRESHOLD}.`);
+  }
+  if (accuracy === undefined || typeof accuracy !== 'number' || accuracy < MIN_ACCURACY_THRESHOLD || accuracy > 100) {
+    return res.status(400).json(`Error: Accuracy must be at least ${MIN_ACCURACY_THRESHOLD}%.`);
+  }
+
   const newScore = new Score({
-    playerName,
+    playerName: playerName.trim(),
     wpm,
     accuracy,
     mode,
@@ -73,11 +80,9 @@ router.route('/add').post((req, res) => {
     language,
   });
 
-  // .save() is a Mongoose method that saves the new document to the database.
-  // It also returns a promise.
   newScore.save()
-    .then(() => res.json('Score added!')) // If successful, return a success message.
-    .catch(err => res.status(400).json('Error: ' + err)); // If there's an error, return a 400 error.
+    .then(() => res.json('Score added!'))
+    .catch(err => res.status(400).json('Error: ' + err));
 });
 
 // We export the router so we can use it in our main server.js file.
