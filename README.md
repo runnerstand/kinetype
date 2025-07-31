@@ -1,3 +1,6 @@
+[![](https://github.com/runnerstand/kinetype/blob/main/client/public/kine-type-logo.png?raw=true)](https://kinetype.vercel.app/)
+<br />
+
 # Kinetype - A chill typing test
 # About
 This was made using VueJS, quite complicated but it works.
@@ -10,5 +13,4 @@ This was made using VueJS, quite complicated but it works.
 - Leaderboard system
 - And more etc...
 # Credits
-[runnerstand](https://github.com/runnerstand) is the only person made this
-And thank you coursework, for pushing this deadline.
+[runnerstand](https://github.com/runnerstand) made this single project.
