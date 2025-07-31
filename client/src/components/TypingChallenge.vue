@@ -1,6 +1,8 @@
 <script setup>
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue';
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import axios from 'axios';
+import Notification from './Notification.vue';
+import LanguageSelector from './LanguageSelector.vue';
 
 // --- Reactive State ---
 const textToType = ref("Loading new text...");
@@ -27,6 +29,12 @@ const language = ref('en');
 // --- Score Saving State ---
 const playerName = ref("Player");
 const scoreSaved = ref(false);
+const notifications = ref([]);
+
+// --- Validation Thresholds ---
+const minWpmThreshold = 10;
+const minAccuracyThreshold = 50;
+const maxWpmThreshold = 300;
 
 // --- Template Ref for the text area ---
 const textAreaRef = ref(null);
@@ -87,6 +95,7 @@ const setupChallenge = async () => {
     } catch (error) {
         console.error("Error fetching new text:", error);
         textToType.value = "Error: Could not fetch a new text.";
+        addNotification("Error: Could not fetch new text. Please try again.", "error");
     }
 
     userInput.value = "";
@@ -194,9 +203,18 @@ const handleKeyDown = (event) => {
     }
 };
 
+const addNotification = (message, type = 'info', duration = 3000) => {
+  const id = Date.now();
+  notifications.value.push({ id, message, type, duration });
+};
+
+const removeNotification = (id) => {
+  notifications.value = notifications.value.filter(n => n.id !== id);
+};
+
 const saveScore = async () => {
     if (!playerName.value.trim()) {
-        alert("Please enter a name.");
+        addNotification("Please enter a name to save the score.", "error");
         return;
     }
     try {
@@ -210,16 +228,16 @@ const saveScore = async () => {
             wpm: wpm.value,
             accuracy: accuracy.value,
             mode: modeDescription,
-            // Include the settings when saving the score
             punctuation: allowPunctuation.value,
             numbers: allowNumbers.value,
             language: language.value
         };
         await axios.post(`https://kinetype.onrender.com/scores/add`, scoreData);
         scoreSaved.value = true;
+        addNotification("✓ Score Saved!", "success");
     } catch (error) {
         console.error("Error saving score:", error);
-        alert("Could not save score. Please try again.");
+        addNotification("Error: Could not save score.", "error");
     }
 };
 
@@ -295,9 +313,40 @@ onUnmounted(() => {
     if (timerInterval) clearInterval(timerInterval);
 });
 
+watch(gameStatus, (newStatus) => {
+  if (newStatus === 'finished') {
+    const isWpmInvalid = wpm.value < minWpmThreshold || wpm.value > maxWpmThreshold;
+    const isAccuracyInvalid = accuracy.value < minAccuracyThreshold;
+
+    if (isWpmInvalid || isAccuracyInvalid) {
+      let messages = [];
+      if (wpm.value < minWpmThreshold) {
+        messages.push(`WPM must be at least ${minWpmThreshold}`);
+      }
+      if (wpm.value > maxWpmThreshold) {
+        messages.push(`WPM must be less than ${maxWpmThreshold}`);
+      }
+      if (isAccuracyInvalid) {
+        messages.push(`Accuracy must be at least ${minAccuracyThreshold}%`);
+      }
+      addNotification(`Score not saved. ${messages.join(' and ')}.`, 'error', 5000);
+    }
+  }
+});
+
 </script>
 
 <template>
+  <div class="notification-container">
+    <Notification
+      v-for="n in notifications"
+      :key="n.id"
+      :message="n.message"
+      :type="n.type"
+      :duration="n.duration"
+      @close="removeNotification(n.id)"
+    />
+  </div>
   <div class="typing-challenge-container">
     <!-- Game Mode Options with Icons -->
     <div class="game-options">
@@ -331,12 +380,7 @@ onUnmounted(() => {
         <button @click="selectQuoteLength('long')" :class="{active: gameMode === 'quote' && quoteSetting === 'long'}" class="option-button">long</button>
       </div>
       <div class="option-group">
-        <div class="icon-wrapper" data-tooltip="language">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-        </div>
-        <button @click="selectLanguage('en')" :class="{active: language === 'en'}" class="option-button">english</button>
-        <button @click="selectLanguage('vn')" :class="{active: language === 'vn'}" class="option-button">vietnamese</button>
-        <button @click="selectLanguage('es')" :class="{active: language === 'es'}" class="option-button">español</button>
+        <LanguageSelector :selected-language="language" @language-selected="selectLanguage" />
       </div>
       <div class="option-group" v-if="gameMode !== 'quote'">
         <!-- Punctuation and Numbers toggles -->
@@ -409,7 +453,7 @@ onUnmounted(() => {
           <span class="result-value">{{ accuracy }}%</span>
         </div>
         
-        <div v-if="!scoreSaved" class="save-score-form">
+        <div v-if="wpm >= minWpmThreshold && accuracy >= minAccuracyThreshold && wpm <= maxWpmThreshold && !scoreSaved" class="save-score-form">
           <input type="text" v-model="playerName" class="name-input" placeholder="Enter your name">
           <div class="icon-wrapper" data-tooltip="Save Score">
             <button @click="saveScore" class="icon-button save-button">
@@ -417,7 +461,7 @@ onUnmounted(() => {
             </button>
           </div>
         </div>
-        <div v-else class="score-saved-message">
+        <div v-if="scoreSaved" class="score-saved-message">
           <span>✓ Score Saved!</span>
         </div>
 
@@ -692,6 +736,16 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.notification-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .results-fade-enter-active {
