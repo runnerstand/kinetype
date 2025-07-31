@@ -1,7 +1,6 @@
 [![](https://github.com/runnerstand/kinetype/blob/main/client/public/kine-type-logo.png?raw=true)](https://kinetype.vercel.app/)
 <br />
 
-# Kinetype - A chill typing test
 # About
 This was made using VueJS, quite complicated but it works.
 # Features
