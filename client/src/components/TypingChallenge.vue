@@ -84,7 +84,10 @@ const setupChallenge = async () => {
             response = await axios.get(`https://kinetype.onrender.com/texts/words?punctuation=${allowPunctuation.value}&numbers=${allowNumbers.value}&language=${language.value}`);
             const words = response.data;
             let wordCount = gameMode.value === 'time' ? 200 : wordSetting.value;
-            const shuffled = words.sort(() => 0.5 - Math.random());
+            
+            // Handle cases where words might be phrases, especially for languages like Vietnamese
+            const allSingleWords = words.join(' ').split(/\s+/).filter(Boolean);
+            const shuffled = allSingleWords.sort(() => 0.5 - Math.random());
             const selectedWords = shuffled.slice(0, wordCount);
             textToType.value = selectedWords.join(' ');
         } else if (gameMode.value === 'quote') {
