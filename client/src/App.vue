@@ -24,6 +24,7 @@ onMounted(() => {
         <RouterLink to="/">Home</RouterLink>
         <RouterLink to="/leaderboard">Leaderboard</RouterLink>
         <RouterLink to="/theme">Theme</RouterLink>
+        <a href="https://github.com/runnerstand/kinetype" target="_blank" rel="noopener noreferrer">GitHub</a>
       </nav>
     </header>
     <main class="main-content">
